@@ -3,19 +3,20 @@
 /*                                                        :::      ::::::::   */
 /*   codexion.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
+/*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:30:24 by evvan             #+#    #+#             */
-/*   Updated: 2026/04/21 18:09:43 by evvan            ###   ########.fr       */
+/*   Updated: 2026/04/29 15:28:10 by eolivier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-	#include "codexion.h"
+#include "codexion.h"
 
-	int main(int ac, char *av[])
+int main(int ac, char *av[])
+{
+	if (ac == 8)
 	{
-		if (ac == 8)
-        {
-            
-        }
+		
 	}
+}
+

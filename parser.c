@@ -3,12 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
+/*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/21 18:09:59 by evvan             #+#    #+#             */
-/*   Updated: 2026/04/21 18:10:23 by evvan            ###   ########.fr       */
+/*   Updated: 2026/04/28 15:41:49 by eolivier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
+char* parser(char* things)
+{
+
+
+    return 
+}

@@ -3,20 +3,25 @@
 /*                                                        :::      ::::::::   */
 /*   codexion.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
+/*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:30:24 by evvan             #+#    #+#             */
-/*   Updated: 2026/04/29 15:28:10 by eolivier         ###   ########.fr       */
+/*   Updated: 2026/05/11 20:15:14 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "codexion.h"
+	#include "codexion.h"
 
-int main(int ac, char *av[])
-{
-	if (ac == 8)
+	int main(int ac, char *av[])
 	{
-		
+		t_info  argument;
+		if (ac == 9)
+		{
+			argument = parser(av);
+			if ()
+				return (0);
+		}
+		printf("\n");
+		return(0);
 	}
-}
 

@@ -6,7 +6,7 @@
 /*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:30:22 by evvan             #+#    #+#             */
-/*   Updated: 2026/05/11 20:29:59 by evvan            ###   ########.fr       */
+/*   Updated: 2026/05/12 09:08:08 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,9 +16,11 @@
 # include <pthread.h>
 # include <stdio.h>
 # include <stdlib.h>
+# include <limits.h>
 # include <unistd.h>
 # include <time.h>
 # include <sys/time.h>
+
 typedef struct s_info
 {
 	int		number_of_coder;

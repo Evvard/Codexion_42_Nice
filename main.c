@@ -1,29 +1,39 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   codexion.c                                         :+:      :+:    :+:   */
+/*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:30:24 by evvan             #+#    #+#             */
-/*   Updated: 2026/05/12 07:58:53 by evvan            ###   ########.fr       */
+/*   Updated: 2026/05/18 17:23:21 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-	#include "codexion.h"
+#include "codexion.h"
 
-	int main(int ac, char *av[])
+int main(int ac, char *av[])
+{
+	parsing_list  *argument;
+
+	if (ac == 9)
 	{
-		t_info  argument;
-		if (ac == 9)
+		argument = parser(av); 
+		if (!argument)
 		{
-			argument = parser(**av);
-			if (!argument)
-				return (0);
-			
+			printf("Erreur de parsing ou arguments invalides.\n");
+			return (1);
 		}
-		else
-			return (0);
-		printf("\n");
+		
+		printf("Coder count: %d, Scheduler: %s\n", argument->number_of_coder, argument->scheduler);
+		
+		free(argument->scheduler);
+		free(argument);
 	}
-	
+	else
+	{
+		printf("Usage: %s [coder] [burnout] [compile] [debug] [refactor] [compiles_req] [cooldown] [scheduler]\n", av[0]);
+		return (1);
+	}
+	return (0);
+}

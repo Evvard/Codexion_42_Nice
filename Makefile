@@ -1,12 +1,26 @@
 
+NAME    = Codexion
 
-$(NAME), all, clean, fclean and re
+CC      = gcc
+CFLAGS  = -Wall -Wextra -Werror -pthread
 
-NAME = Codexion
+SRC     = parser.c main.c
+OBJ     = $(SRC:.c=.o)
 
-CC = gcc -pthread mon_programme.c -o mon_programme
+all: $(NAME)
 
-FLAGS = --Wall --Wextra --Werror
+$(NAME): $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 
+%.o: %.c codexion.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY : all, clean, fclean, re
+clean:
+	rm -f $(OBJ)
+
+fclean: clean
+	rm -f $(NAME)
+
+re: fclean all
+
+.PHONY: all clean fclean re

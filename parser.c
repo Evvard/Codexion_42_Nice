@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
+/*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/21 18:09:59 by evvan             #+#    #+#             */
-/*   Updated: 2026/05/12 10:35:52 by evvan            ###   ########.fr       */
+/*   Updated: 2026/05/12 13:34:35 by eolivier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,3 +45,10 @@ t_info	parser(char **things)
 		return ;
 	return (*result);
 }
+
+fit note - musculation and ste
+manga workout image pour la morphologie modifier profil morpho explication
+changer le menu parametre par sectiomn
+
+bouton are you ready pour demarer une sceance et lecrono
+mal a voir le workout et afficher 1 exo par 1 exo

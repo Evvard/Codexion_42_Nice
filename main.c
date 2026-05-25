@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
+/*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:30:24 by evvan             #+#    #+#             */
-/*   Updated: 2026/05/19 15:30:29 by eolivier         ###   ########.fr       */
+/*   Updated: 2026/05/25 18:20:42 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 int main(int ac, char *av[])
 {
-	parsing_list  *argument;
+	t_parsing_list  *argument;
 
 	if (ac == 9)
 	{

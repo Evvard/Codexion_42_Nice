@@ -6,7 +6,7 @@
 /*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:30:22 by evvan             #+#    #+#             */
-/*   Updated: 2026/05/25 18:23:40 by evvan            ###   ########.fr       */
+/*   Updated: 2026/05/25 20:20:37 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,12 @@ typedef struct t_env
 }					t_environnement;
 
 t_parsing_list	*parser(char **things);
-int				main(int ac, char *av[]);
+long long		get_time_in_ms(void);
+void			print_status(t_info_coder *coder, char *status);
+void			*monitor_routine(void *arg);
+void			*coder_routine(void *arg);
+void			free_all(t_environnement *env);
+int				is_prioritarian(t_info_coder *coder);
+void			execute_compile(t_info_coder *coder);
 
 #endif

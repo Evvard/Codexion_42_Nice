@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
+/*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/21 18:09:59 by evvan             #+#    #+#             */
-/*   Updated: 2026/05/19 15:27:56 by eolivier         ###   ########.fr       */
+/*   Updated: 2026/05/25 20:12:20 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,8 @@
 
 static int	is_valid_values(char **things)
 {
-	if (!things || !things[1] || !things[2] || !things[3] || !things[4] || 
-		!things[5] || !things[6] || !things[7] || !things[8])
+	if (!things || !things[1] || !things[2] || !things[3] || !things[4]
+		|| !things[5] || !things[6] || !things[7] || !things[8])
 		return (0);
 	if (!atoi(things[1]) || !atoi(things[2]) || !atoi(things[3]))
 		return (0);
@@ -28,11 +28,11 @@ static int	is_valid_values(char **things)
 	return (1);
 }
 
-parsing_list	*parser(char **things)
+t_parsing_list	*parser(char **things)
 {
-	parsing_list	*result;
+	t_parsing_list	*result;
 
-	result = malloc(sizeof(parsing_list));
+	result = malloc(sizeof(t_parsing_list));
 	if (!result)
 		return (NULL);
 	if (is_valid_values(things))

@@ -6,7 +6,7 @@
 /*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/25 20:09:25 by evvan             #+#    #+#             */
-/*   Updated: 2026/06/01 11:36:33 by eolivier         ###   ########.fr       */
+/*   Updated: 2026/06/01 11:46:28 by eolivier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,16 +56,16 @@ static void	heapify_down(t_heap *heap, int idx)
 	}
 }
 
-void	minimal_heap_sort(t_info_coder *coders, int count, char *sched, int *result_order)
+void	minimal_heap_sort(t_info_coder *coders, int n, char *sched, int *rs)
 {
-	t_heap_node	*nodes = malloc(sizeof(t_heap_node) * count);
+	t_heap_node	*nodes = malloc(sizeof(t_heap_node) * n);
 	t_heap		heap;
 	int			i;
 
 	if (!nodes)
 		return ;
 	i = -1;
-	while (++i < count)
+	while (++i < n)
 	{
 		nodes[i].coder_id = coders[i].nb_of_coder;
 		if (strcmp(sched, "edf") == 0)
@@ -74,13 +74,13 @@ void	minimal_heap_sort(t_info_coder *coders, int count, char *sched, int *result
 			nodes[i].priority = coders[i].last_compile_start;
 	}
 	heap.data = nodes;
-	heap.size = count;
-	for (i = (count / 2) - 1; i >= 0; i--)
+	heap.size = n;
+	for (i = (n / 2) - 1; i >= 0; i--)
 		heapify_down(&heap, i);
 	i = 0;
 	while (heap.size > 0)
 	{
-		result_order[i++] = heap.data[0].coder_id;
+		rs[i++] = heap.data[0].coder_id;
 		swap_nodes(&heap.data[0], &heap.data[heap.size - 1]);
 		heap.size--;
 		heapify_down(&heap, 0);

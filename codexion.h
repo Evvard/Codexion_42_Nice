@@ -6,7 +6,7 @@
 /*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:30:22 by evvan             #+#    #+#             */
-/*   Updated: 2026/06/01 11:32:08 by eolivier         ###   ########.fr       */
+/*   Updated: 2026/06/01 11:46:51 by eolivier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,16 +58,15 @@ typedef struct t_env
 
 typedef struct t_node
 {
-    int         coder_id;
-    long long   priority;
-}               t_heap_node;
+	int			coder_id;
+	long long	priority;
+}				t_heap_node;
 
 typedef struct t_heap
 {
-    t_heap_node  *data;
-    int          size;
-}               t_heap;
-
+	t_heap_node	*data;
+	int			size;
+}				t_heap;
 
 t_parsing_list	*parser(char **things);
 long long		get_time_in_ms(void);
@@ -77,6 +76,6 @@ void			*coder_routine(void *arg);
 void			free_all(t_environnement *env);
 int				is_prioritarian(t_info_coder *coder);
 void			execute_compile(t_info_coder *coder);
-void            minimal_heap_sort(t_info_coder *coders, int count, char *sched, int *result_order);
+void			minimal_heap_sort(t_info_coder *coders, int count, char *sched, int *result_order);
 
 #endif

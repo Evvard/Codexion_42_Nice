@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   codexion_utils.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
+/*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/25 20:09:25 by evvan             #+#    #+#             */
-/*   Updated: 2026/05/25 20:16:16 by evvan            ###   ########.fr       */
+/*   Updated: 2026/06/01 11:36:33 by eolivier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,24 +27,92 @@ void	print_status(t_info_coder *coder, char *status)
 	pthread_mutex_unlock(&coder->env->log_mutext);
 }
 
+static void	swap_nodes(t_heap_node *a, t_heap_node *b)
+{
+	t_heap_node	tmp;
+
+	tmp = *a;
+	*a = *b;
+	*b = tmp;
+}
+
+static void	heapify_down(t_heap *heap, int idx)
+{
+	int	smallest;
+	int	left;
+	int	right;
+
+	smallest = idx;
+	left = 2 * idx + 1;
+	right = 2 * idx + 2;
+	if (left < heap->size && heap->data[left].priority < heap->data[smallest].priority)
+		smallest = left;
+	if (right < heap->size && heap->data[right].priority < heap->data[smallest].priority)
+		smallest = right;
+	if (smallest != idx)
+	{
+		swap_nodes(&heap->data[idx], &heap->data[smallest]);
+		heapify_down(heap, smallest);
+	}
+}
+
+void	minimal_heap_sort(t_info_coder *coders, int count, char *sched, int *result_order)
+{
+	t_heap_node	*nodes = malloc(sizeof(t_heap_node) * count);
+	t_heap		heap;
+	int			i;
+
+	if (!nodes)
+		return ;
+	i = -1;
+	while (++i < count)
+	{
+		nodes[i].coder_id = coders[i].nb_of_coder;
+		if (strcmp(sched, "edf") == 0)
+			nodes[i].priority = coders[i].last_compile_start + coders[i].env->params->time_to_burnout;
+		else
+			nodes[i].priority = coders[i].last_compile_start;
+	}
+	heap.data = nodes;
+	heap.size = count;
+	for (i = (count / 2) - 1; i >= 0; i--)
+		heapify_down(&heap, i);
+	i = 0;
+	while (heap.size > 0)
+	{
+		result_order[i++] = heap.data[0].coder_id;
+		swap_nodes(&heap.data[0], &heap.data[heap.size - 1]);
+		heap.size--;
+		heapify_down(&heap, 0);
+	}
+	free(nodes);
+}
+
 int	is_prioritarian(t_info_coder *coder)
 {
-	long long	dead[3];
-	int			idx[2];
+	int	*order;
+	int	i;
+	int	is_first;
 
-	if (strcmp(coder->env->params->scheduler, "fifo") == 0)
+	order = malloc(sizeof(int) * coder->env->params->number_of_coder);
+	if (!order)
 		return (1);
-	idx[0] = (coder->nb_of_coder - 2 + coder->env->params->number_of_coder)
-		% coder->env->params->number_of_coder;
-	idx[1] = coder->nb_of_coder % coder->env->params->number_of_coder;
-	dead[0] = coder->last_compile_start + coder->env->params->time_to_burnout;
-	dead[1] = coder->env->coder[idx[0]].last_compile_start
-		+ coder->env->params->time_to_burnout;
-	dead[2] = coder->env->coder[idx[1]].last_compile_start
-		+ coder->env->params->time_to_burnout;
-	if (dead[0] > dead[1] || dead[0] > dead[2])
-		return (0);
-	return (1);
+	minimal_heap_sort(coder->env->coder, coder->env->params->number_of_coder,
+		coder->env->params->scheduler, order);
+	is_first = 1;
+	i = 0;
+	while (order[i] != coder->nb_of_coder)
+	{
+		if (order[i] == (coder->nb_of_coder - 2 + coder->env->params->number_of_coder) % coder->env->params->number_of_coder + 1
+			|| order[i] == (coder->nb_of_coder % coder->env->params->number_of_coder) + 1)
+		{
+			is_first = 0;
+			break ;
+		}
+		i++;
+	}
+	free(order);
+	return (is_first);
 }
 
 void	execute_compile(t_info_coder *coder)

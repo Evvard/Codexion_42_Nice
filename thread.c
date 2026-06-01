@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   thread.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
+/*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/12 07:59:17 by evvan             #+#    #+#             */
-/*   Updated: 2026/05/25 20:18:19 by evvan            ###   ########.fr       */
+/*   Updated: 2026/06/01 11:37:15 by eolivier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,8 @@ void	*monitor_routine(void *arg)
 static int	try_take_dongles(t_info_coder *coder)
 {
 	long long	now;
+	int			first_mutex;
+	int			second_mutex;
 
 	pthread_mutex_lock(&coder->env->state_mutext);
 	now = get_time_in_ms();
@@ -81,10 +83,22 @@ static int	try_take_dongles(t_info_coder *coder)
 		return (pthread_mutex_unlock(&coder->env->state_mutext), 0);
 	if (!is_prioritarian(coder))
 		return (pthread_mutex_unlock(&coder->env->state_mutext), 0);
+	if (coder->left_dongle < coder->right_dongle)
+	{
+		first_mutex = coder->left_dongle;
+		second_mutex = coder->right_dongle;
+	}
+	else
+	{
+		first_mutex = coder->right_dongle;
+		second_mutex = coder->left_dongle;
+	}
+	
+	pthread_mutex_lock(&coder->env->dongle_mutext[first_mutex]);
 	pthread_mutex_unlock(&coder->env->state_mutext);
-	pthread_mutex_lock(&coder->env->dongle_mutext[coder->left_dongle]);
+
 	print_status(coder, "has taken a dongle");
-	pthread_mutex_lock(&coder->env->dongle_mutext[coder->right_dongle]);
+	pthread_mutex_lock(&coder->env->dongle_mutext[second_mutex]);
 	print_status(coder, "has taken a dongle");
 	return (1);
 }

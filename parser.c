@@ -6,7 +6,7 @@
 /*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/21 18:09:59 by evvan             #+#    #+#             */
-/*   Updated: 2026/06/01 11:48:55 by eolivier         ###   ########.fr       */
+/*   Updated: 2026/06/01 12:00:00 by eolivier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,24 +28,32 @@ static int	is_numeric_string(char *str)
 	return (1);
 }
 
-t_parsing_list	*parser(char **things)
+static int	validate_args(char **things)
 {
-	t_parsing_list	*list;
-	int				i;
+	int	i;
 
 	if (!things || !things[1] || !things[2] || !things[3] || !things[4]
 		|| !things[5] || !things[6] || !things[7] || !things[8])
-		return (NULL);
+		return (0);
 	i = 1;
 	while (i <= 7)
 	{
 		if (!is_numeric_string(things[i]))
-			return (NULL);
+			return (0);
 		i++;
 	}
 	if (atoi(things[1]) <= 0 || !(*things[8]))
-		return (NULL);
+		return (0);
 	if (strcmp(things[8], "fifo") != 0 && strcmp(things[8], "edf") != 0)
+		return (0);
+	return (1);
+}
+
+t_parsing_list	*parser(char **things)
+{
+	t_parsing_list	*list;
+
+	if (!validate_args(things))
 		return (NULL);
 	list = malloc(sizeof(t_parsing_list));
 	if (!list)

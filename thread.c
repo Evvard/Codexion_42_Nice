@@ -6,10 +6,9 @@
 /*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/12 07:59:17 by evvan             #+#    #+#             */
-/*   Updated: 2026/06/01 11:48:50 by eolivier         ###   ########.fr       */
+/*   Updated: 2026/06/01 12:00:00 by eolivier         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 
 #include "codexion.h"
 
@@ -84,19 +83,9 @@ static int	try_take_dongles(t_info_coder *coder)
 		return (pthread_mutex_unlock(&coder->env->state_mutext), 0);
 	if (!is_prioritarian(coder))
 		return (pthread_mutex_unlock(&coder->env->state_mutext), 0);
-	if (coder->left_dongle < coder->right_dongle)
-	{
-		first_mutex = coder->left_dongle;
-		second_mutex = coder->right_dongle;
-	}
-	else
-	{
-		first_mutex = coder->right_dongle;
-		second_mutex = coder->left_dongle;
-	}
+	get_ordered_dongles(coder, &first_mutex, &second_mutex);
 	pthread_mutex_lock(&coder->env->dongle_mutext[first_mutex]);
 	pthread_mutex_unlock(&coder->env->state_mutext);
-
 	print_status(coder, "has taken a dongle");
 	pthread_mutex_lock(&coder->env->dongle_mutext[second_mutex]);
 	print_status(coder, "has taken a dongle");

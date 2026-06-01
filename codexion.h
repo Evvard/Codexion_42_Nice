@@ -76,6 +76,7 @@ void			*coder_routine(void *arg);
 void			free_all(t_environnement *env);
 int				is_prioritarian(t_info_coder *coder);
 void			execute_compile(t_info_coder *coder);
-void			minimal_heap_sort(t_info_coder *coders, int count, char *sched, int *result_order);
+void			get_ordered_dongles(t_info_coder *c, int *first, int *second);
+void			minimal_heap_sort(t_info_coder *c, int n, char *s, int *r);
 
 #endif

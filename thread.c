@@ -3,31 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   thread.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
+/*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/12 07:59:17 by evvan             #+#    #+#             */
-/*   Updated: 2026/06/01 12:00:00 by eolivier         ###   ########.fr       */
+/*   Updated: 2026/06/01 19:12:55 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
-
-static int	check_coder_burnout(t_environnement *env, int i)
-{
-	long long	now;
-
-	now = get_time_in_ms();
-	if (now - env->coder[i].last_compile_start > env->params->time_to_burnout)
-	{
-		env->simulation_end = 1;
-		pthread_mutex_lock(&env->log_mutext);
-		printf("%lld %d burned out\n", now - env->start_time,
-			env->coder[i].nb_of_coder);
-		pthread_mutex_unlock(&env->log_mutext);
-		return (1);
-	}
-	return (0);
-}
 
 static int	check_all_coders(t_environnement *env)
 {
@@ -73,23 +56,52 @@ void	*monitor_routine(void *arg)
 static int	try_take_dongles(t_info_coder *coder)
 {
 	long long	now;
-	int			first_mutex;
-	int			second_mutex;
+	int			first;
+	int			second;
 
 	pthread_mutex_lock(&coder->env->state_mutext);
 	now = get_time_in_ms();
 	if (now < coder->env->dongle_cooldown_ends[coder->left_dongle]
-		|| now < coder->env->dongle_cooldown_ends[coder->right_dongle])
+		|| now < coder->env->dongle_cooldown_ends[coder->right_dongle]
+		|| !is_prioritarian(coder))
 		return (pthread_mutex_unlock(&coder->env->state_mutext), 0);
-	if (!is_prioritarian(coder))
-		return (pthread_mutex_unlock(&coder->env->state_mutext), 0);
-	get_ordered_dongles(coder, &first_mutex, &second_mutex);
-	pthread_mutex_lock(&coder->env->dongle_mutext[first_mutex]);
 	pthread_mutex_unlock(&coder->env->state_mutext);
+	first = coder->left_dongle;
+	second = coder->right_dongle;
+	if (first > second)
+	{
+		first = coder->right_dongle;
+		second = coder->left_dongle;
+	}
+	pthread_mutex_lock(&coder->env->dongle_mutext[first]);
 	print_status(coder, "has taken a dongle");
-	pthread_mutex_lock(&coder->env->dongle_mutext[second_mutex]);
+	if (coder->env->params->number_of_coder == 1)
+		return (0);
+	pthread_mutex_lock(&coder->env->dongle_mutext[second]);
 	print_status(coder, "has taken a dongle");
 	return (1);
+}
+
+static void	*handle_single_coder(t_info_coder *coder)
+{
+	int	dongle;
+
+	dongle = coder->left_dongle;
+	pthread_mutex_lock(&coder->env->dongle_mutext[dongle]);
+	print_status(coder, "has taken a dongle");
+	while (1)
+	{
+		pthread_mutex_lock(&coder->env->state_mutext);
+		if (coder->env->simulation_end)
+		{
+			pthread_mutex_unlock(&coder->env->state_mutext);
+			pthread_mutex_unlock(&coder->env->dongle_mutext[dongle]);
+			return (NULL);
+		}
+		pthread_mutex_unlock(&coder->env->state_mutext);
+		usleep(1000);
+	}
+	return (NULL);
 }
 
 void	*coder_routine(void *arg)
@@ -97,12 +109,13 @@ void	*coder_routine(void *arg)
 	t_info_coder	*coder;
 
 	coder = (t_info_coder *)arg;
+	if (coder->env->params->number_of_coder == 1)
+		return (handle_single_coder(coder));
 	while (1)
 	{
 		pthread_mutex_lock(&coder->env->state_mutext);
-		if (coder->env->simulation_end
-			|| (coder->env->params->number_of_compiles_required > 0
-				&& coder->compile_count
+		if (coder->env->simulation_end || (coder->env->params
+				->number_of_compiles_required > 0 && coder->compile_count
 				>= coder->env->params->number_of_compiles_required))
 			return (pthread_mutex_unlock(&coder->env->state_mutext), NULL);
 		pthread_mutex_unlock(&coder->env->state_mutext);

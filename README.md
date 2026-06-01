@@ -21,7 +21,7 @@ scheduler : "fifo"(premier arrive premier servis) ou "edf"(premier a bientot mou
 
 
 exemple :<br>
-***✗ ./Codexion 4 500 10 30 10 10 20 edf***<br>
+***./codexion 4 500 10 30 10 10 20 edf***<br>
 
 
 ***Resources :***

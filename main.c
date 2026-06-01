@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
+/*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:30:24 by evvan             #+#    #+#             */
-/*   Updated: 2026/05/27 16:35:20 by eolivier         ###   ########.fr       */
+/*   Updated: 2026/05/25 20:12:02 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,7 +96,7 @@ int	main(int ac, char *av[])
 	}
 	argument = parser(av);
 	if (!argument)
-		return (printf("Arguments invalides.\n"), 1);
+		return (printf("Erreur de parsing ou arguments invalides.\n"), 1);
 	env.params = argument;
 	if (!init_allocations(&env))
 		return (free(argument->scheduler), free(argument), 1);

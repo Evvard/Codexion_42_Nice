@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   codexion.h                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: eolivier <eolivier@student.42.fr>          +#+  +:+       +#+        */
+/*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:30:22 by evvan             #+#    #+#             */
-/*   Updated: 2026/06/01 11:46:51 by eolivier         ###   ########.fr       */
+/*   Updated: 2026/05/26 11:32:44 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,18 +56,6 @@ typedef struct t_env
 	long long		start_time;
 }					t_environnement;
 
-typedef struct t_node
-{
-	int			coder_id;
-	long long	priority;
-}				t_heap_node;
-
-typedef struct t_heap
-{
-	t_heap_node	*data;
-	int			size;
-}				t_heap;
-
 t_parsing_list	*parser(char **things);
 long long		get_time_in_ms(void);
 void			print_status(t_info_coder *coder, char *status);
@@ -76,7 +64,6 @@ void			*coder_routine(void *arg);
 void			free_all(t_environnement *env);
 int				is_prioritarian(t_info_coder *coder);
 void			execute_compile(t_info_coder *coder);
-void			get_ordered_dongles(t_info_coder *c, int *first, int *second);
-void			minimal_heap_sort(t_info_coder *c, int n, char *s, int *r);
+int				check_coder_burnout(t_environnement *env, int i);
 
 #endif

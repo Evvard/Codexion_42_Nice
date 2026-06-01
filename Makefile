@@ -4,7 +4,7 @@ NAME    = codexion
 CC      = gcc
 CFLAGS  = -Wall -Wextra -Werror -pthread
 
-SRC     = parser.c main.c thread.c codexion_utils.c codexion_actions.c
+SRC     = parser.c main.c thread.c codexion_utils.c
 OBJ     = $(SRC:.c=.o)
 
 all: $(NAME)

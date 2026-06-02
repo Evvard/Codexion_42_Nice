@@ -6,7 +6,7 @@
 /*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/25 20:09:25 by evvan             #+#    #+#             */
-/*   Updated: 2026/05/25 20:16:16 by evvan            ###   ########.fr       */
+/*   Updated: 2026/06/02 21:36:49 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,16 +49,21 @@ int	is_prioritarian(t_info_coder *coder)
 
 void	execute_compile(t_info_coder *coder)
 {
+	long long	time;
+
 	pthread_mutex_lock(&coder->env->state_mutext);
-	coder->last_compile_start = get_time_in_ms();
+	time = get_time_in_ms();
+	coder->last_compile_start = time;
+	coder->env->dongle_cooldown_ends[coder->left_dongle] = time
+		+ coder->env->params->time_to_compile
+		+ coder->env->params->dongle_cooldown;
+	coder->env->dongle_cooldown_ends[coder->right_dongle] = time
+		+ coder->env->params->time_to_compile
+		+ coder->env->params->dongle_cooldown;
 	pthread_mutex_unlock(&coder->env->state_mutext);
 	print_status(coder, "is compiling");
 	usleep(coder->env->params->time_to_compile * 1000);
 	pthread_mutex_lock(&coder->env->state_mutext);
-	coder->env->dongle_cooldown_ends[coder->left_dongle] = get_time_in_ms()
-		+ coder->env->params->dongle_cooldown;
-	coder->env->dongle_cooldown_ends[coder->right_dongle] = get_time_in_ms()
-		+ coder->env->params->dongle_cooldown;
 	coder->compile_count++;
 	pthread_mutex_unlock(&coder->env->state_mutext);
 	pthread_mutex_unlock(&coder->env->dongle_mutext[coder->right_dongle]);

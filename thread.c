@@ -6,7 +6,7 @@
 /*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/12 07:59:17 by evvan             #+#    #+#             */
-/*   Updated: 2026/06/01 19:12:55 by evvan            ###   ########.fr       */
+/*   Updated: 2026/06/02 22:13:45 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,3 +132,9 @@ void	*coder_routine(void *arg)
 	}
 	return (NULL);
 }
+
+
+
+if ((dead[0] > dead[1] || (dead[0] == dead[1] && coder->nb_of_coder < coder->env->coder[idx[0]].nb_of_coder))
+    || (dead[0] > dead[2] || (dead[0] == dead[2] && coder->nb_of_coder < coder->env->coder[idx[1]].nb_of_coder)))
+    return (0);

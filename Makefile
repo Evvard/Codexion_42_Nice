@@ -1,10 +1,9 @@
-
 NAME    = codexion
 
-CC      = gcc
+CC      = cc
 CFLAGS  = -Wall -Wextra -Werror -pthread
 
-SRC     = parser.c main.c thread.c codexion_utils.c
+SRC     = parser.c main.c thread.c monitor.c scheduler.c heap.c codexion_utils.c
 OBJ     = $(SRC:.c=.o)
 
 all: $(NAME)
@@ -24,5 +23,3 @@ fclean: clean
 re: fclean all
 
 .PHONY: all clean fclean re
-
-

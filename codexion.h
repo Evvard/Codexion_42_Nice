@@ -6,7 +6,7 @@
 /*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/13 14:30:22 by evvan             #+#    #+#             */
-/*   Updated: 2026/05/26 11:32:44 by evvan            ###   ########.fr       */
+/*   Updated: 2026/06/08 21:12:04 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,23 +16,27 @@
 # include <pthread.h>
 # include <stdio.h>
 # include <stdlib.h>
-# include <limits.h>
 # include <unistd.h>
 # include <time.h>
 # include <sys/time.h>
 # include <string.h>
 
-typedef struct t_coder
+typedef struct s_request
 {
-	int				nb_of_coder;
-	long long		last_compile_start;
-	int				compile_count;
-	int				left_dongle;
-	int				right_dongle;
-	struct t_env	*env;
-}					t_info_coder;
+	int			coder_id;
+	long long	deadline;
+	long long	seq;
+}				t_request;
 
-typedef struct t_list
+typedef struct s_heap
+{
+	t_request	*array;
+	int			size;
+	int			capacity;
+	int			(*cmp)(t_request *a, t_request *b);
+}				t_heap;
+
+typedef struct s_parsing_list
 {
 	int		number_of_coder;
 	int		time_to_burnout;
@@ -44,14 +48,30 @@ typedef struct t_list
 	char	*scheduler;
 }			t_parsing_list;
 
-typedef struct t_env
+typedef struct s_coder
+{
+	int				nb_of_coder;
+	long long		last_compile_start;
+	int				compile_count;
+	int				left_dongle;
+	int				right_dongle;
+	int				waiting;
+	t_request		req;
+	struct s_env	*env;
+}					t_info_coder;
+
+typedef struct s_env
 {
 	t_parsing_list	*params;
 	t_info_coder	*coder;
-	pthread_mutex_t	*dongle_mutext;
+	pthread_mutex_t	*dongle_mutex;
+	int				*dongle_held;
 	long long		*dongle_cooldown_ends;
-	pthread_mutex_t	log_mutext;
-	pthread_mutex_t	state_mutext;
+	t_heap			*queue;
+	pthread_mutex_t	sched_lock;
+	pthread_cond_t	queue_cond;
+	pthread_mutex_t	log_lock;
+	long long		seq_counter;
 	int				simulation_end;
 	long long		start_time;
 }					t_environnement;
@@ -61,9 +81,15 @@ long long		get_time_in_ms(void);
 void			print_status(t_info_coder *coder, char *status);
 void			*monitor_routine(void *arg);
 void			*coder_routine(void *arg);
-void			free_all(t_environnement *env);
-int				is_prioritarian(t_info_coder *coder);
+int				run_threads(t_environnement *e, pthread_t *m, pthread_t *c);
 void			execute_compile(t_info_coder *coder);
-int				check_coder_burnout(t_environnement *env, int i);
+void			request_dongles(t_info_coder *coder);
+void			free_all(t_environnement *env);
+int				sim_ended(t_environnement *env);
+int				cmp_fifo(t_request *a, t_request *b);
+int				cmp_edf(t_request *a, t_request *b);
+void			heap_push(t_heap *heap, t_request req);
+void			heap_remove(t_heap *heap, int coder_id);
+int				heap_peek_id(t_heap *heap);
 
 #endif

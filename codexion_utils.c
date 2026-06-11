@@ -6,99 +6,64 @@
 /*   By: evvan <evvan@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/25 20:09:25 by evvan             #+#    #+#             */
-/*   Updated: 2026/06/02 21:36:49 by evvan            ###   ########.fr       */
+/*   Updated: 2026/06/08 21:12:07 by evvan            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
+int	cmp_fifo(t_request *a, t_request *b)
+{
+	return (a->seq < b->seq);
+}
+
+int	cmp_edf(t_request *a, t_request *b)
+{
+	if (a->deadline != b->deadline)
+		return (a->deadline < b->deadline);
+	return (a->seq < b->seq);
+}
+
+int	heap_peek_id(t_heap *h)
+{
+	if (h->size == 0)
+		return (-1);
+	return (h->array[0].coder_id);
+}
+
 void	print_status(t_info_coder *coder, char *status)
 {
 	long long	timestamp;
 
-	pthread_mutex_lock(&coder->env->log_mutext);
-	pthread_mutex_lock(&coder->env->state_mutext);
+	pthread_mutex_lock(&coder->env->sched_lock);
 	if (!coder->env->simulation_end)
 	{
 		timestamp = get_time_in_ms() - coder->env->start_time;
+		pthread_mutex_lock(&coder->env->log_lock);
 		printf("%lld %d %s\n", timestamp, coder->nb_of_coder, status);
+		pthread_mutex_unlock(&coder->env->log_lock);
 	}
-	pthread_mutex_unlock(&coder->env->state_mutext);
-	pthread_mutex_unlock(&coder->env->log_mutext);
-}
-
-int	is_prioritarian(t_info_coder *coder)
-{
-	long long	dead[3];
-	int			idx[2];
-
-	if (strcmp(coder->env->params->scheduler, "fifo") == 0)
-		return (1);
-	idx[0] = (coder->nb_of_coder - 2 + coder->env->params->number_of_coder)
-		% coder->env->params->number_of_coder;
-	idx[1] = coder->nb_of_coder % coder->env->params->number_of_coder;
-	dead[0] = coder->last_compile_start + coder->env->params->time_to_burnout;
-	dead[1] = coder->env->coder[idx[0]].last_compile_start
-		+ coder->env->params->time_to_burnout;
-	dead[2] = coder->env->coder[idx[1]].last_compile_start
-		+ coder->env->params->time_to_burnout;
-	if (dead[0] > dead[1] || dead[0] > dead[2])
-		return (0);
-	return (1);
-}
-
-void	execute_compile(t_info_coder *coder)
-{
-	long long	time;
-
-	pthread_mutex_lock(&coder->env->state_mutext);
-	time = get_time_in_ms();
-	coder->last_compile_start = time;
-	coder->env->dongle_cooldown_ends[coder->left_dongle] = time
-		+ coder->env->params->time_to_compile
-		+ coder->env->params->dongle_cooldown;
-	coder->env->dongle_cooldown_ends[coder->right_dongle] = time
-		+ coder->env->params->time_to_compile
-		+ coder->env->params->dongle_cooldown;
-	pthread_mutex_unlock(&coder->env->state_mutext);
-	print_status(coder, "is compiling");
-	usleep(coder->env->params->time_to_compile * 1000);
-	pthread_mutex_lock(&coder->env->state_mutext);
-	coder->compile_count++;
-	pthread_mutex_unlock(&coder->env->state_mutext);
-	pthread_mutex_unlock(&coder->env->dongle_mutext[coder->right_dongle]);
-	pthread_mutex_unlock(&coder->env->dongle_mutext[coder->left_dongle]);
+	pthread_mutex_unlock(&coder->env->sched_lock);
 }
 
 void	free_all(t_environnement *env)
 {
 	int	i;
 
-	i = -1;
-	while (++i < env->params->number_of_coder)
-		pthread_mutex_destroy(&env->dongle_mutext[i]);
-	pthread_mutex_destroy(&env->log_mutext);
-	pthread_mutex_destroy(&env->state_mutext);
-	free(env->coder);
-	free(env->dongle_mutext);
-	free(env->dongle_cooldown_ends);
-	free(env->params->scheduler);
-	free(env->params);
-}
-
-int	check_coder_burnout(t_environnement *env, int i)
-{
-	long long	now;
-
-	now = get_time_in_ms();
-	if (now - env->coder[i].last_compile_start > env->params->time_to_burnout)
+	i = 0;
+	while (i < env->params->number_of_coder)
 	{
-		env->simulation_end = 1;
-		pthread_mutex_lock(&env->log_mutext);
-		printf("%lld %d burned out\n", now - env->start_time,
-			env->coder[i].nb_of_coder);
-		pthread_mutex_unlock(&env->log_mutext);
-		return (1);
+		pthread_mutex_destroy(&env->dongle_mutex[i]);
+		i++;
 	}
-	return (0);
+	pthread_mutex_destroy(&env->log_lock);
+	pthread_mutex_destroy(&env->sched_lock);
+	pthread_cond_destroy(&env->queue_cond);
+	free(env->coder);
+	free(env->dongle_mutex);
+	free(env->dongle_held);
+	free(env->dongle_cooldown_ends);
+	free(env->queue->array);
+	free(env->queue);
+	free(env->params);
 }

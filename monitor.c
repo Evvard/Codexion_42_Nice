@@ -84,7 +84,8 @@ void	*monitor_routine(void *arg)
 		pthread_mutex_lock(&env->sched_lock);
 		if (env->simulation_end || monitor_check(env))
 		{
-			pthread_cond_broadcast(&env->queue_cond);
+			if (env->waiters > 0)
+				pthread_cond_broadcast(&env->queue_cond);
 			pthread_mutex_unlock(&env->sched_lock);
 			return (NULL);
 		}

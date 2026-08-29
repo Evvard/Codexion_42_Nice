@@ -73,6 +73,7 @@ typedef struct s_env
 	pthread_mutex_t	log_lock;
 	long long		seq_counter;
 	int				simulation_end;
+	int				waiters;
 	long long		start_time;
 }					t_environnement;
 
@@ -84,6 +85,8 @@ void			*coder_routine(void *arg);
 int				run_threads(t_environnement *e, pthread_t *m, pthread_t *c);
 void			execute_compile(t_info_coder *coder);
 void			request_dongles(t_info_coder *coder);
+long long		compute_timeout(t_info_coder *c);
+void			block_until_signal(t_environnement *e, long long ms);
 void			free_all(t_environnement *env);
 int				sim_ended(t_environnement *env);
 int				cmp_fifo(t_request *a, t_request *b);

@@ -21,7 +21,7 @@ int	cmp_edf(t_request *a, t_request *b)
 {
 	if (a->deadline != b->deadline)
 		return (a->deadline < b->deadline);
-	return (a->seq < b->seq);
+	return (a->coder_id > b->coder_id);
 }
 
 int	heap_peek_id(t_heap *h)

@@ -59,7 +59,8 @@ static void	init_env_values(t_environnement *env)
 	pthread_mutex_init(&env->sched_lock, NULL);
 	pthread_cond_init(&env->queue_cond, NULL);
 	env->simulation_end = 0;
-	env->seq_counter = 0;
+	env->seq_counter = env->params->number_of_coder;
+	env->waiters = 0;
 	env->start_time = get_time_in_ms();
 	env->queue->size = 0;
 	env->queue->capacity = env->params->number_of_coder;

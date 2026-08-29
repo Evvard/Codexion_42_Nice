@@ -2,87 +2,109 @@
 
 # Description
 
-Maîtrisez la programmation concurrente en C grâce à une simulation intense où les programmeurs luttent contre l'épuisement professionnel tout en se disputant de rares clés USB. Mettez en œuvre des threads POSIX, des mutex, des variables de condition et des algorithmes de planification sophistiqués (FIFO/EDF) pour coordonner le partage des ressources, éviter les blocages et garantir un accès équitable, tout en maintenant la productivité de vos programmeurs avant que la date limite n'arrive et donc la fin du programme
+Maîtrisez la programmation concurrente en C grâce à une simulation où des codeurs luttent contre le burnout tout en se disputant de rares clés USB (dongles). Le programme met en œuvre des threads POSIX, des mutex, une variable de condition et un ordonnanceur à file de priorité (FIFO/EDF) pour coordonner le partage des dongles, éviter les interblocages et garantir un accès équitable, jusqu'à ce que tous les codeurs aient atteint leur quota de compilations — ou qu'un codeur burn out, ce qui arrête la simulation.
 </br>
 
 
 # Instructions
-Pour compiler le projet il faut executer:    
+
+Pour compiler le projet :
 ```zsh
 make
-make all
-make clean
-make fclean
-make re
 ```
-Puis ils faut mettres les arguments :
+
+Les autres règles du Makefile :
+```zsh
+make all      # identique à make
+make clean    # supprime les fichiers objets
+make fclean   # supprime les objets et le binaire
+make re       # fclean puis all
 ```
-- number_of_coders
 
-- time_to_burnout : temps en ms avant le burnout des codeurs
+Le programme prend 8 arguments, tous obligatoires, dans cet ordre :
+```
+- number_of_coders : nombre de codeurs, égal au nombre de dongles sur la table
 
-- time_to_compile : temps de compiltion en ms
+- time_to_burnout : temps en ms au-delà duquel un codeur burn out, compté depuis
+  le DÉBUT de sa dernière compilation (ou depuis le début de la simulation)
+
+- time_to_compile : temps de compilation en ms (le codeur tient 2 dongles)
 
 - time_to_debug : temps de debug en ms
 
-- time_to_refactor : temps de factorisation en ms  
+- time_to_refactor : temps de refactorisation en ms
 
-- number_of_compiles_required : nombre de codeur  
+- number_of_compiles_required : nombre de compilations que CHAQUE codeur doit
+  atteindre pour que la simulation s'arrête
 
-- dongle_cooldown: temps avant de pouvoir reutiliser les cles usb pour compiler  
+- dongle_cooldown : temps en ms pendant lequel un dongle reste indisponible
+  après avoir été relâché
 
-- scheduler : "fifo"(premier arrive premier servis) ou "edf"(premier a bientot mourrir premier servis)
+- scheduler : "fifo" (premier arrivé, premier servi) ou "edf" (Earliest Deadline
+  First : priorité au codeur dont la deadline last_compile_start +
+  time_to_burnout est la plus proche ; à deadlines égales, priorité au
+  coder_id le plus élevé)
 ```
 
-exemple :  
+Exemples :
 ```zsh
-./codexion [coder] [burnout] [compile] [debug] [refactor] [nb_compilation] [cle_usb_cooldown] [mode]
+./codexion [coders] [burnout] [compile] [debug] [refactor] [nb_compilations] [cooldown] [mode]
 
-./codexion 4 500 10 30 10 10 20 edf - succes
-./codexion 4 40 10 30 10 10 20 edf - burn out
+./codexion 4 800 200 200 60 5 60 edf     # succes : tous atteignent le quota
+./codexion 5 200 100 100 100 10 60 fifo  # burnout : "201 1 burned out"
 ```
-**Le burnout est obligatoire si `time_to_burnout` \> `time_to_compile` + `time_to_debug` + `time_to_refactor`**
+
+**Le burnout est inévitable si `time_to_burnout` \< `time_to_compile` + `time_to_debug` + `time_to_refactor`** : le codeur ne peut pas revenir compiler avant sa deadline.
+
+Attention, ce n'est qu'une borne inférieure. Les codeurs sont en cercle et deux voisins partagent un dongle, donc au plus `n / 2` codeurs compilent en parallèle. Une condition de faisabilité plus réaliste est :
+
+```
+time_to_burnout  >  ceil(n / 2) x (time_to_compile + dongle_cooldown)
+```
+
+Exemple : `5 800 200 200 60 5 60` donne 3 x 260 = 780 ms pour une deadline de 800 ms. La marge de 20 ms est trop faible et un burnout survient de manière intermittente (observé environ 1 fois sur 12, identiquement en fifo et en edf : c'est un problème de paramètres, pas d'ordonnancement). Prévoir une marge confortable.
 
 # Resources
 
-
-Youtube playlist: [Ytb](#https://www.youtube.com/watch?v=d9s_d28yJq0&list=PLfqABt5AS4FmuQf70psXrsMLEDQXNkLq2).  
-https://www.geeksforgeeks.org/c/multithreading-in-c/<br>
-Gemini 3.1  
+Youtube playlist : [Ytb](https://www.youtube.com/watch?v=d9s_d28yJq0&list=PLfqABt5AS4FmuQf70psXrsMLEDQXNkLq2)  
+https://www.geeksforgeeks.org/c/multithreading-in-c/  
+Gemini 3.1
 
 ### Ia Usage
-Makefile et un peu de logique supplement debugging
+L'IA a été utilisée pour la rédaction du Makefile, un appui ponctuel sur la logique d'ordonnancement, et le débogage.
 
 # Cas de blocage gérés
 
 ***1. Prévention de l'interblocage (Deadlock) et conditions de Coffman***  
-Le scénario classique d'interblocage des philosophes (où chaque thread détient une ressource et attend indéfiniment la seconde) est évité par conception. Les codeurs doivent acquérir leurs dongles gauche et droit en toute sécurité. Pour éliminer la condition Hold and Wait (Détenir et Attendre), le Min-Heap orchestre l'accès : un codeur ne tente de verrouiller les mutex physiques que lorsqu'il a validé sa priorité et la disponibilité du matériel auprès de l'ordonnanceur.  
+Le scénario classique d'interblocage des philosophes (où chaque thread détient une ressource et attend indéfiniment la seconde) est évité par conception, sur deux niveaux. D'abord, la condition *Hold and Wait* est éliminée par l'ordonnanceur : dans `request_dongles`, un codeur n'obtient l'autorisation de compiler que lorsque ses **deux** dongles sont simultanément libres et hors cooldown (`is_ready`), et il ne touche aux mutex physiques qu'après cette validation. Ensuite, la condition d'*attente circulaire* est cassée par l'ordre d'acquisition : `take_physical_dongles` verrouille toujours le mutex d'indice le plus bas en premier.
 
 ***2. Prévention de la famine (Starvation)***  
-Sous les deux ordonnanceurs (FIFO et EDF), l'équité est garantie. En mode FIFO, les requêtes sont accordées strictement dans l'ordre d'arrivée en utilisant un timestamp d'entrée. En mode EDF, le codeur dont la deadline de burnout est la plus proche est prioritaire. Pour assurer un déterminisme parfait et empêcher la famine systémique, une règle de départage (tie-breaker) exige de prioriser le codeur ayant le coder_id le plus élevé en cas d'égalité exacte des deadlines.  
+Sous les deux ordonnanceurs, l'arbitrage passe par un min-heap de requêtes. En mode FIFO, l'ordre est donné par un compteur de séquence monotone (`seq_counter`), incrémenté à chaque nouvelle requête ; la première requête de chaque codeur est amorcée avec son propre identifiant, ce qui rend le démarrage déterministe. En mode EDF, la priorité va au codeur dont la deadline `last_compile_start + time_to_burnout` est la plus proche, et à deadlines exactement égales au codeur ayant le `coder_id` le plus élevé (`cmp_edf`).
+
+L'ordonnancement est **work-conserving** et non pas strictement global : un codeur n'est pas obligé d'attendre la tête du heap. Il démarre s'il est en tête, ou si aucun de ses deux voisins immédiats n'est simultanément en attente, plus prioritaire que lui et prêt à démarrer (`can_grant`). C'est ce qui permet à plusieurs codeurs non adjacents de compiler en parallèle au lieu de sérialiser inutilement toute la table — et donc ce qui évite des burnouts artificiels.
 
 ***3. Gestion du Cooldown des Dongles***  
-Lorsqu'un codeur relâche ses dongles, une période de refroidissement (cooldown) matériel est appliquée. L'heure exacte de fin du cooldown est enregistrée en toute sécurité sous un mutex d'état global. Tout codeur vérifiant la disponibilité des ressources bypassera les dongles si le temps système actuel n'a pas encore dépassé le timestamp de refroidissement, empêchant ainsi le vol prématuré des ressources (race condition).  
+Lorsqu'un codeur termine sa compilation, il enregistre pour ses deux dongles une date de fin de cooldown (`dongle_cooldown_ends`) sous le verrou de l'ordonnanceur, avant même de relâcher les mutex physiques. Tout codeur qui évalue la disponibilité des ressources considère un dongle comme indisponible tant que l'heure courante n'a pas dépassé cette date (`is_ready`), ce qui empêche toute reprise anticipée. Un codeur en attente d'un cooldown ne tourne pas à vide : `compute_timeout` calcule la date de fin de cooldown la plus proche et le thread se rendort jusque-là.
 
 ***4. Détection Précise du Burnout***  
-Un thread monitor distinct vérifie constamment le statut de tous les codeurs. Il calcule le temps écoulé depuis le début de leur dernière compilation. Si un codeur manque sa deadline, le monitor stoppe la simulation et imprime le log de burnout dans la limite stricte des 10 ms imposée par le sujet.  
+Un thread monitor distinct parcourt en boucle l'état de tous les codeurs et compare le temps écoulé depuis le début de leur dernière compilation à `time_to_burnout`. Sa période de scrutation est de 500 µs, ce qui place l'affichage du message de burnout largement sous la limite des 10 ms imposée par le sujet (0 à 1 ms mesuré). Le monitor arrête aussi la simulation lorsque tous les codeurs ont atteint le quota de compilations.
 
-***5. Sérialisation Stricte des Logs et Blocs Atomiques***  
-Pour éviter les data races (accès concurrents) et l'entrelacement des lignes sur la sortie standard, tous les logs sont sérialisés à l'aide d'un mutex global dédié (log_mutext). De plus, les actions séquentielles rapides (comme l'acquisition des deux dongles suivie instantanément de la compilation) sont regroupées dans un seul bloc d'impression atomique. Cela empêche l'ordonnanceur de l'OS de suspendre un thread au milieu de son action, garantissant une cohérence chronologique parfaite et éliminant tout risque d'invalidation due à des logs entremêlés.  
+***5. Sérialisation Stricte des Logs***  
+Pour éviter tout entrelacement de lignes sur la sortie standard, tout l'affichage passe par `print_status`, qui prend le verrou de l'ordonnanceur puis un mutex dédié aux logs avant d'écrire. Cette double prise garantit qu'un message est cohérent avec l'état qu'il décrit et qu'aucun log ne peut sortir après la fin de la simulation : `print_status` ne réaffiche rien si `simulation_end` est déjà positionné, ce qui garantit que la ligne `burned out` est bien la dernière du programme.
 
-***6. Précision Temporelle à Haute Concurrence (ft_usleep)***  
-La fonction standard usleep() est soumise aux latences de l'OS (context-switching), qui s'accumulent de manière désastreuse lors de la gestion de dizaines ou centaines de threads (ex: 200 codeurs), entraînant des retards artificiels et de faux burnouts. Pour garantir une précision absolue, ce projet utilise un ft_usleep personnalisé. Il s'agit d'une attente active segmentée en micro-sommeils de 500µs, vérifiant en continu le temps exact écoulé via gettimeofday() tout en surveillant le flag simulation_end pour éviter tout freeze en fin de programme.  
+***6. Fin de Simulation Sans Blocage***  
+Un codeur endormi dans `pthread_cond_wait` ne doit ni rester bloqué à la fin de la simulation, ni provoquer un réveil sur une condition inexistante. Le nombre de threads réellement en attente est donc suivi explicitement (`waiters`), et un `pthread_cond_broadcast` n'est émis que si ce compteur est non nul — que le réveil vienne d'un codeur qui relâche ses dongles ou du monitor qui termine la simulation. À la sortie de l'attente, chaque codeur revérifie `simulation_end` avant de continuer, ce qui garantit la terminaison propre de tous les threads.
 
 # Mécanismes de synchronisation des threads
 
-***1. `pthread_mutex_t dongle_mutext[]`***  
-Un tableau de mutex où chaque dongle USB individuel est protégé. Les codeurs doivent strictement verrouiller le dongle avec l'ID le plus bas en premier, puis le dongle avec l'ID le plus élevé (ordre mathématique asymétrique). Cela force une stratégie d'allocation des ressources qui empêche structurellement les deadlocks circulaires.  
+***1. `pthread_mutex_t *dongle_mutex`***  
+Un tableau de mutex, un par dongle USB, qui matérialise la possession physique de la ressource. Un codeur verrouille toujours le mutex d'indice le plus bas en premier, puis le plus élevé (`take_physical_dongles`), ce qui empêche structurellement toute attente circulaire. C'est aussi le point d'émission des deux messages `has taken a dongle`.
 
-***2. `pthread_mutex_t log_mutext`***  
-Un mutex dédié à la sérialisation des sorties dans le terminal lors des appels à print_status(), garantissant que les messages d'état des différents threads ne se chevaucheront jamais.  
+***2. `pthread_mutex_t log_lock`***  
+Un mutex dédié à la sérialisation des écritures sur la sortie standard, pris dans `print_status` et par le monitor lors de l'affichage du burnout. Il garantit que les messages de threads différents ne se chevauchent jamais sur une même ligne.
 
-***3. `pthread_mutex_t state_mutext`***  
-Un mutex de section critique protégeant toutes les variables de simulation partagées (simulation_end, deadlines, compteurs de compilation, et les tableaux de cooldown). Il empêche les données d'être corrompues par des lectures/écritures simultanées entre le monitor et les codeurs.  
+***3. `pthread_mutex_t sched_lock`***  
+Le verrou de section critique de l'ordonnanceur. Il protège l'ensemble de l'état partagé : le min-heap des requêtes, les drapeaux `dongle_held`, les dates `dongle_cooldown_ends`, les compteurs de compilation, les `last_compile_start` et le drapeau `simulation_end`. Le monitor et les codeurs le prennent tous, ce qui exclut toute lecture/écriture concurrente sur ces données (validé par `valgrind --tool=helgrind` : 0 erreur).
 
 ***4. `pthread_cond_t queue_cond`***  
-Au lieu d'un polling actif (des boucles infinies de usleep destructrices pour le CPU), la synchronisation des files d'attente est gérée via une variable de condition. Lorsqu'un codeur attend ses dongles, il se met en sommeil avec pthread_cond_wait, déverrouillant automatiquement le state_mutext pour les autres. Il est instantanément réveillé de manière asynchrone par un signal pthread_cond_broadcast émis dès qu'un autre codeur relâche ses ressources ou que la simulation est interrompue.
+Plutôt qu'un polling actif, l'attente des dongles passe par une variable de condition. `block_until_signal` appelle `pthread_cond_wait` lorsque le codeur attend seulement la libération d'un dongle, et `pthread_cond_timedwait` lorsqu'il attend en plus la fin d'un cooldown, avec pour échéance la date calculée par `compute_timeout`. Dans les deux cas `sched_lock` est relâché pendant l'attente et repris au réveil. Les réveils sont émis par `pthread_cond_broadcast`, uniquement lorsque `waiters > 0`, soit à la libération des dongles, soit à la fin de la simulation.

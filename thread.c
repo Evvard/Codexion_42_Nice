@@ -27,7 +27,8 @@ void	execute_compile(t_info_coder *c)
 	e->dongle_cooldown_ends[c->right_dongle] = now + e->params->dongle_cooldown;
 	e->dongle_held[c->left_dongle] = 0;
 	e->dongle_held[c->right_dongle] = 0;
-	pthread_cond_broadcast(&e->queue_cond);
+	if (e->waiters > 0)
+		pthread_cond_broadcast(&e->queue_cond);
 	pthread_mutex_unlock(&e->sched_lock);
 	pthread_mutex_unlock(&e->dongle_mutex[c->right_dongle]);
 	pthread_mutex_unlock(&e->dongle_mutex[c->left_dongle]);

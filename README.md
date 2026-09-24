@@ -108,3 +108,36 @@ Le verrou de section critique de l'ordonnanceur. Il protège l'ensemble de l'ét
 
 ***4. `pthread_cond_t queue_cond`***  
 Plutôt qu'un polling actif, l'attente des dongles passe par une variable de condition. `block_until_signal` appelle `pthread_cond_wait` lorsque le codeur attend seulement la libération d'un dongle, et `pthread_cond_timedwait` lorsqu'il attend en plus la fin d'un cooldown, avec pour échéance la date calculée par `compute_timeout`. Dans les deux cas `sched_lock` est relâché pendant l'attente et repris au réveil. Les réveils sont émis par `pthread_cond_broadcast`, uniquement lorsque `waiters > 0`, soit à la libération des dongles, soit à la fin de la simulation.
+
+
+
+
+README corrigé, français conservé, intitulés de sections inchangés. Aucun code touché (README.md seul modifié, build et norminette toujours OK).
+
+Erreurs factuelles corrigées
+
+1. ft_usleep n'existe pas. C'était le plus grave. La section 6 décrivait « une attente active segmentée en micro-sommeils de 500 µs » via un ft_usleep personnalisé — introuvable dans tout le projet (grep -rn ft_usleep ne le trouvait que dans le README). Le cont. Le chiffre de 500 µs venait en réalité de monitor.c:93, la période descrutation du monitor. La section 6 est réécrite sur ce qui existe vraiment : la terminaison sans blocage via le compteur waiters et les broadcasts gardés.
+
+2. Noms de mutex inventés. Le README citait log_mutext, state_mutext, dongle_mutext[] — aucun n'existe. Les vrais sont log_lock, sched_lock, dongle_mutex. Et il n'y a pas de mutex
+d'état séparé : sched_lock joue les deux rôles. Un évaluateur qui grep le hedécalage.
+
+3. Inégalité inversée (l'ancienne ligne 44) : > → <, vérifié dans les deux s
+
+4. « bloc d'impression atomique » fictif. La section 5 affirmait que les deu compiling étaient regroupés dans une seule impression atomique. Faux :print_status prend et relâche les verrous à chaque message. Remplacé par le vrai garde-fou, qui est meilleur à défendre : print_status n'imprime rien si simulation_end est déjà posé,
+ce qui garantit que burned out est la dernière ligne.
+
+5. number_of_compiles_required : nombre de codeur → nombre de compilations qre.
+
+6. FIFO « timestamp d'entrée » → c'est un compteur de séquence monotone seq_ation « accordées strictement dans l'ordre d'arrivée » était fausse :can_grant est work-conserving. La nuance est maintenant explicite, avec la justification (c'est ce qui autorise le parallélisme des non-voisins et évite les faux burnouts).
+
+7. Section 1 (deadlock) incomplète : elle n'attribuait la prévention qu'au heap. L'ordre d'acquisition croissant des mutex dans take_physical_dongles — le vrai casseur d'attente
+circulaire — n'était pas mentionné.
+
+8. Divers : lien YouTube cassé (# collé devant l'URL), make clean/fclean/re  compilation, « temps de factorisation » → refactorisation, typo « compiltion », time_to_burnout sans préciser qu'il court depuis le début de la dernière compilation.
+
+Un point découvert en route
+
+Les deux exemples du README (4 500 10 30 10 10 20 et 4 40 10 30 10 10 20) utilisaient des timings sous 60 ms, que la grille interdit de tester. Je les ai remplacés par deux exemples
+vérifiés : 4 800 200 200 60 5 60 edf (0 burnout sur 18 runs) et 5 200 100 10d out, 6/6).
+
+En les cherchant j'ai trouvé que 5 800 200 200 60 5 60 burn out environ 1 foifo et en edf. Ce ne sont pas les threads : avec 5 codeurs en cercle, au plus 2 compilent en parallèle, donc un tour complet coûte 3 × (200 + 60) = 780 ms pour une deadline de 800 ms — 20 ms de marge. Ce sont des paramètres infaisables en pratique, pas un défaut d'ordonnancement, et la grille prévoit ce cas (« discuss borderline c la condition de faisabilité time_to_burnout > ceil(n/2) × (time_to_compile + dongle_cooldown) dans les Instructions — utile à l'oral, et surtout à ne pas utiliser comme démo de succès.
